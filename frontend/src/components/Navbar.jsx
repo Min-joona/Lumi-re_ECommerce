@@ -19,8 +19,8 @@ export default function Navbar() {
   return (
     <header className="sticky top-0 z-40 border-b border-ink/10 bg-cream/80 backdrop-blur-md">
       <nav className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-        <Link to="/" className="font-serif text-2xl tracking-tight">
-          Lumière<span className="text-gold">.</span>
+        <Link to="/" className="flex items-center gap-2">
+          <img src="/logo.png" alt="Lumière" className="h-9 w-auto" />
         </Link>
 
         <div className="hidden items-center gap-8 md:flex">

@@ -1,10 +1,17 @@
 const express = require('express');
 const cors = require('cors');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
+const mongoSanitize = require('express-mongo-sanitize');
 require('dotenv').config();
 
 const connectDB = require('./config/db');
 
 const app = express();
+app.set('trust proxy', 1);
+
+// Security headers (this is a pure JSON API, so CSP is not needed)
+app.use(helmet({ contentSecurityPolicy: false }));
 
 // CORS
 const allowedOrigins = process.env.ALLOWED_ORIGINS
@@ -21,6 +28,20 @@ app.use(
   })
 );
 app.use(express.json({ limit: '1mb' }));
+app.use(mongoSanitize());
+
+// Rate limiting — generous globally, strict on auth to blunt brute force
+app.use('/api', rateLimit({ windowMs: 15 * 60 * 1000, max: 300, standardHeaders: true, legacyHeaders: false }));
+app.use(
+  '/api/auth',
+  rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 20,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { message: 'Too many attempts, please try again later.' },
+  })
+);
 
 // Ensure DB connection before handling requests (serverless-friendly)
 app.use(async (_req, res, next) => {
@@ -37,6 +58,20 @@ app.get('/api/health', (_req, res) => res.json({ status: 'ok', service: 'amar-ec
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/products', require('./routes/products'));
 app.use('/api/orders', require('./routes/orders'));
+
+// One-time cloud seed, guarded by a shared secret (used when the local
+// network can't reach Atlas directly). Not linked from anywhere public.
+app.post('/api/seed', async (req, res) => {
+  if (!process.env.SEED_TOKEN || req.headers['x-seed-token'] !== process.env.SEED_TOKEN) {
+    return res.status(403).json({ message: 'Forbidden' });
+  }
+  try {
+    const result = await require('./seedRunner')();
+    res.json({ message: 'Seed complete', ...result });
+  } catch (err) {
+    res.status(500).json({ message: 'Seed failed', error: err.message });
+  }
+});
 
 app.use((req, res) => res.status(404).json({ message: `Route ${req.originalUrl} not found` }));
 

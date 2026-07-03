@@ -1,84 +1,73 @@
-# Lumière — MERN E-Commerce Platform
+# Lumière
 
-[![MERN](https://img.shields.io/badge/Stack-MERN-brightgreen)](#)
-[![License](https://img.shields.io/badge/license-MIT-blue)](#)
+A full-stack e-commerce platform built on the MERN stack — product catalog, cart, checkout, order management, reviews, and an admin dashboard, wrapped in a refined storefront UI.
 
-A full-stack, mobile-first e-commerce store: product catalog with search / filter / sort,
-cart, JWT auth, demo checkout, order history, product reviews, and an admin dashboard.
+**Live demo:** [lumiere-store.vercel.app](https://lumiere-store.vercel.app)
 
-> Built by **Amar Hassen Mohammednur** as part of a full-stack portfolio.
+## Overview
 
-## ✨ Features
+Lumière implements the complete lifecycle of an online store:
 
-- **Storefront** — hero, category browsing, featured products, responsive product grid
-- **Search, filter & sort** — by keyword, category, price, rating (paginated API)
-- **Cart** — persistent (localStorage), quantity controls, live totals
-- **Auth** — register / login with JWT, protected routes
-- **Checkout** — shipping form + demo payment, server-side re-pricing
-- **Orders** — order confirmation + customer order history
-- **Reviews** — authenticated users rate & review products
-- **Admin dashboard** — revenue/orders/product stats, update order status
-- **Mobile-first** — works beautifully on phones and desktops
+- **Catalog** — search, category filtering, sorting, and pagination served by a REST API
+- **Cart & checkout** — persistent cart, shipping details, and server-side re-pricing to prevent client tampering
+- **Accounts** — JWT authentication with customer and administrator roles
+- **Orders** — order history, status tracking, and fulfillment updates
+- **Reviews** — verified, authenticated product ratings
+- **Admin dashboard** — revenue and order statistics, order status management
 
-## 🧱 Tech Stack
-
-| Layer | Tech |
-|-------|------|
-| Frontend | React 18, Vite, Tailwind CSS, Framer Motion, React Router, Axios |
-| Backend | Node.js, Express, Mongoose |
-| Database | MongoDB (Atlas) |
-| Auth | JWT + bcrypt |
-| Deploy | Vercel (frontend + serverless API) |
-
-## 📁 Structure
+## Architecture
 
 ```
 amar-ecommerce/
-├── backend/     # Express API (products, auth, orders)
-│   ├── config/  # DB connection (serverless-cached)
-│   ├── models/  # Product, User, Order
-│   ├── routes/  # /api/products, /api/auth, /api/orders
-│   ├── data/    # seed catalog
-│   └── seed.js
-└── frontend/    # React + Vite storefront
+├── backend/          Express REST API
+│   ├── config/       Database connection (serverless-aware)
+│   ├── middleware/   Authentication and authorization guards
+│   ├── models/       Product, User, Order schemas
+│   └── routes/       /api/products · /api/auth · /api/orders
+└── frontend/         React storefront (Vite)
     └── src/
-        ├── pages/       # Home, Shop, ProductDetail, Cart, Checkout, …
-        ├── components/  # Navbar, ProductCard, …
-        └── context/     # Auth + Cart providers
+        ├── pages/       Route-level views
+        ├── components/  Reusable UI
+        └── context/     Auth and cart state
 ```
 
-## 🚀 Getting Started
+## Tech Stack
 
-### 1. Backend
+| Layer      | Technology                                          |
+| ---------- | --------------------------------------------------- |
+| Frontend   | React 18, Vite, Tailwind CSS, Framer Motion         |
+| Backend    | Node.js, Express, Mongoose                          |
+| Database   | MongoDB Atlas                                       |
+| Security   | Helmet, rate limiting, input sanitization, JWT      |
+
+## Getting Started
+
+**Prerequisites:** Node.js 18+ and a MongoDB connection string.
+
 ```bash
+# API
 cd backend
 npm install
-cp .env.example .env        # fill in MONGODB_URI + JWT_SECRET
-npm run seed                # load 24 demo products + 2 users
-npm run dev                 # http://localhost:5000
-```
+cp .env.example .env   # configure environment
+npm run seed           # optional: load sample catalog
+npm run dev
 
-### 2. Frontend
-```bash
+# Storefront
 cd frontend
 npm install
-npm run dev                 # http://localhost:5173
+npm run dev
 ```
 
-### Demo accounts
-| Role | Email | Password |
-|------|-------|----------|
-| Admin | admin@shop.com | admin123 |
-| Customer | customer@shop.com | demo123 |
+Environment variables are documented in [`backend/.env.example`](backend/.env.example) and [`frontend/.env.example`](frontend/.env.example).
 
-## ☁️ Deployment (Vercel)
+## Security
 
-Deploy **backend** and **frontend** as two separate Vercel projects:
+The API ships with security headers (Helmet), global and per-route rate limiting, MongoDB query sanitization, strict CORS origin allow-listing, and bcrypt-hashed credentials with signed JWTs.
 
-1. **Backend** — root `backend/`. Env vars: `MONGODB_URI`, `JWT_SECRET`, `ALLOWED_ORIGINS` (your frontend URL), `VERCEL=1`.
-2. **Frontend** — root `frontend/`. Env var: `VITE_API_URL` = deployed backend URL. Build: `npm run build`, output `dist`.
+## Author
 
-Then run the seed once against your Atlas cluster.
+**Amar Hassen Mohammednur** — [github.com/Min-joona](https://github.com/Min-joona)
 
-## 📄 License
+## License
+
 MIT

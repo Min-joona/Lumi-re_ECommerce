@@ -12,6 +12,10 @@ import Orders from './pages/Orders';
 import OrderDetail from './pages/OrderDetail';
 import Admin from './pages/Admin';
 import Wishlist from './pages/Wishlist';
+import Profile from './pages/Profile';
+import Shipping from './pages/Shipping';
+import Returns from './pages/Returns';
+import Contact from './pages/Contact';
 import { useAuth } from './context/AuthContext';
 import Assistant from './components/Assistant';
 
@@ -34,10 +38,14 @@ export default function App() {
           <Route path="/cart" element={<Cart />} />
           <Route path="/checkout" element={<Protected><Checkout /></Protected>} />
           <Route path="/wishlist" element={<Protected><Wishlist /></Protected>} />
+          <Route path="/shipping" element={<Shipping />} />
+          <Route path="/returns" element={<Returns />} />
+          <Route path="/contact" element={<Contact />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/orders" element={<Protected><Orders /></Protected>} />
           <Route path="/orders/:id" element={<Protected><OrderDetail /></Protected>} />
+          <Route path="/profile" element={<Protected><Profile /></Protected>} />
           <Route path="/admin" element={<Protected adminOnly><Admin /></Protected>} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

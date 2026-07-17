@@ -24,6 +24,40 @@ export default function OrderDetail() {
         <p className="mt-1 text-sm text-ink/50">Order #{order._id.slice(-8).toUpperCase()} · {order.status}</p>
       </div>
 
+      {['Pending', 'Confirmed', 'Paid', 'Packed', 'Shipped', 'Delivered'].includes(order.status) && (
+        <div className="mt-6 rounded-2xl bg-white p-6">
+          <h2 className="font-serif text-xl mb-6">Tracking</h2>
+          <div className="relative">
+            <div className="absolute top-1/2 left-0 w-full h-1 -translate-y-1/2 bg-ink/5 rounded-full" />
+            <div 
+              className="absolute top-1/2 left-0 h-1 -translate-y-1/2 bg-gold rounded-full transition-all duration-500" 
+              style={{
+                width: 
+                  order.status === 'Pending' ? '0%' :
+                  order.status === 'Confirmed' || order.status === 'Paid' ? '25%' :
+                  order.status === 'Packed' ? '50%' :
+                  order.status === 'Shipped' ? '75%' :
+                  order.status === 'Delivered' ? '100%' : '0%'
+              }}
+            />
+            
+            <div className="relative flex justify-between z-10 text-xs sm:text-sm font-medium">
+              {['Pending', 'Confirmed', 'Packed', 'Shipped', 'Delivered'].map((step, i) => {
+                const isCompleted = ['Pending', 'Confirmed', 'Paid', 'Packed', 'Shipped', 'Delivered'].indexOf(order.status === 'Paid' ? 'Confirmed' : order.status) >= i;
+                return (
+                  <div key={step} className="flex flex-col items-center gap-2 w-16 sm:w-24">
+                    <div className={`w-6 h-6 rounded-full flex items-center justify-center transition-colors ${isCompleted ? 'bg-gold text-white' : 'bg-white border-2 border-ink/10 text-ink/30'}`}>
+                      {isCompleted && <CheckCircle2 size={14} />}
+                    </div>
+                    <span className={`text-center ${isCompleted ? 'text-ink' : 'text-ink/40'}`}>{step}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="mt-6 rounded-2xl bg-white p-6">
         <h2 className="font-serif text-xl">Items</h2>
         <div className="mt-4 space-y-3">

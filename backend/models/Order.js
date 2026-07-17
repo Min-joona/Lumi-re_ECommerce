@@ -23,6 +23,8 @@ const orderSchema = new mongoose.Schema(
     itemsPrice: Number,
     shippingPrice: Number,
     taxPrice: Number,
+    discountPrice: { type: Number, default: 0 },
+    couponApplied: { type: mongoose.Schema.Types.ObjectId, ref: 'Coupon' },
     totalPrice: Number,
     isPaid: { type: Boolean, default: false },
     paidAt: Date,

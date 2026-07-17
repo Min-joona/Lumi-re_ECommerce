@@ -14,12 +14,12 @@ export function CartProvider({ children }) {
     localStorage.setItem('cart', JSON.stringify(items));
   }, [items]);
 
-  const addToCart = (product, qty = 1) => {
+  const addToCart = (product, qty = 1, variantId = null, variantName = null) => {
     setItems((prev) => {
-      const existing = prev.find((i) => i.product === product._id);
+      const existing = prev.find((i) => i.product === product._id && i.variantId === variantId);
       if (existing) {
         return prev.map((i) =>
-          i.product === product._id
+          i.product === product._id && i.variantId === variantId
             ? { ...i, qty: Math.min(i.qty + qty, product.countInStock) }
             : i
         );
@@ -34,17 +34,19 @@ export function CartProvider({ children }) {
           price: product.price,
           countInStock: product.countInStock,
           qty,
+          variantId,
+          variantName,
         },
       ];
     });
-    toast.success(`${product.name} added to cart`);
+    toast.success(`${product.name}${variantName ? ` (${variantName})` : ''} added to cart`);
   };
 
-  const updateQty = (productId, qty) =>
-    setItems((prev) => prev.map((i) => (i.product === productId ? { ...i, qty } : i)));
+  const updateQty = (productId, variantId, qty) =>
+    setItems((prev) => prev.map((i) => (i.product === productId && i.variantId === variantId ? { ...i, qty } : i)));
 
-  const removeFromCart = (productId) =>
-    setItems((prev) => prev.filter((i) => i.product !== productId));
+  const removeFromCart = (productId, variantId) =>
+    setItems((prev) => prev.filter((i) => !(i.product === productId && i.variantId === variantId)));
 
   const clearCart = () => setItems([]);
 

@@ -27,6 +27,7 @@ const publicUser = (u) => ({
   role: u.role === 'customer' && u.isAdmin ? 'admin' : u.role,
   permissions: u.permissions || [],
   status: u.status,
+  addresses: u.addresses || [],
 });
 
 const issueTokens = async (user, req, res) => {
@@ -105,6 +106,51 @@ router.put('/me', protect, async (req, res) => {
   }
 });
 
+// POST /api/auth/addresses
+router.post('/addresses', protect, async (req, res) => {
+  try {
+    const user = req.user;
+    if (req.body.isDefault) {
+      user.addresses.forEach(a => a.isDefault = false);
+    }
+    user.addresses.push(req.body);
+    await user.save();
+    res.json({ addresses: user.addresses });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// PUT /api/auth/addresses/:id
+router.put('/addresses/:id', protect, async (req, res) => {
+  try {
+    const user = req.user;
+    const address = user.addresses.id(req.params.id);
+    if (!address) return res.status(404).json({ message: 'Address not found' });
+    
+    if (req.body.isDefault) {
+      user.addresses.forEach(a => a.isDefault = false);
+    }
+    Object.assign(address, req.body);
+    await user.save();
+    res.json({ addresses: user.addresses });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// DELETE /api/auth/addresses/:id
+router.delete('/addresses/:id', protect, async (req, res) => {
+  try {
+    const user = req.user;
+    user.addresses.pull(req.params.id);
+    await user.save();
+    res.json({ addresses: user.addresses });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
 // GET /api/auth/wishlist
 router.get('/wishlist', protect, async (req, res) => {
   try {
@@ -139,6 +185,45 @@ router.delete('/wishlist/:productId', protect, async (req, res) => {
     await user.save();
     const updatedUser = await User.findById(req.user._id).populate('wishlist');
     res.json(updatedUser.wishlist);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// GET /api/auth/saved-for-later
+router.get('/saved-for-later', protect, async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id).populate('savedForLater');
+    res.json(user.savedForLater || []);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// POST /api/auth/saved-for-later
+router.post('/saved-for-later', protect, async (req, res) => {
+  try {
+    const { productId } = req.body;
+    const user = await User.findById(req.user._id);
+    if (!user.savedForLater.includes(productId)) {
+      user.savedForLater.push(productId);
+      await user.save();
+    }
+    const updatedUser = await User.findById(req.user._id).populate('savedForLater');
+    res.json(updatedUser.savedForLater);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// DELETE /api/auth/saved-for-later/:productId
+router.delete('/saved-for-later/:productId', protect, async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+    user.savedForLater = user.savedForLater.filter(id => id.toString() !== req.params.productId);
+    await user.save();
+    const updatedUser = await User.findById(req.user._id).populate('savedForLater');
+    res.json(updatedUser.savedForLater);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

@@ -18,12 +18,16 @@ export default function ProductDetail() {
   const [loading, setLoading] = useState(true);
   const [review, setReview] = useState({ rating: 5, comment: '' });
   const [related, setRelated] = useState([]);
+  const [selectedVariant, setSelectedVariant] = useState(null);
 
   const load = () => {
     setLoading(true);
     api.get(`/api/products/${slug}`)
       .then(({ data }) => {
         setProduct(data);
+        if (data.variants && data.variants.length > 0) {
+          setSelectedVariant(data.variants[0]);
+        }
         return api.get(`/api/products/${data._id}/recommendations`);
       })
       .then(({ data }) => setRelated(data))
@@ -57,7 +61,7 @@ export default function ProductDetail() {
 
       <div className="grid gap-10 md:grid-cols-2">
         <div className="overflow-hidden rounded-3xl bg-white">
-          <img src={product.image} alt={product.name} className="h-full w-full object-cover" />
+          <img src={selectedVariant && selectedVariant.images && selectedVariant.images.length > 0 ? selectedVariant.images[0] : product.image} alt={product.name} className="h-full w-full object-cover" />
         </div>
 
         <div>
@@ -66,31 +70,55 @@ export default function ProductDetail() {
           <div className="mt-3"><Rating value={product.rating} count={product.numReviews} size={16} /></div>
 
           <div className="mt-5 flex items-baseline gap-3">
-            <span className="text-3xl font-semibold">${product.price.toFixed(2)}</span>
-            {onSale && <span className="text-lg text-ink/40 line-through">${product.compareAtPrice.toFixed(2)}</span>}
+            <span className="text-3xl font-semibold">${(selectedVariant?.price || product.price).toFixed(2)}</span>
+            {onSale && !selectedVariant && <span className="text-lg text-ink/40 line-through">${product.compareAtPrice.toFixed(2)}</span>}
           </div>
 
           <p className="mt-5 leading-relaxed text-ink/70">{product.description}</p>
 
           <div className="mt-6 flex items-center gap-2 text-sm">
-            {product.countInStock > 0 ? (
+            {(selectedVariant ? selectedVariant.countInStock : product.countInStock) > 0 ? (
               <span className="inline-flex items-center gap-1 text-green-700">
-                <Check size={16} /> In stock ({product.countInStock})
+                <Check size={16} /> In stock ({(selectedVariant ? selectedVariant.countInStock : product.countInStock)})
               </span>
             ) : (
               <span className="text-red-600">Currently sold out</span>
             )}
           </div>
 
+          {product.variants && product.variants.length > 0 && (
+            <div className="mt-6">
+              <h3 className="text-sm font-medium text-ink/70 mb-3">Select Variant</h3>
+              <div className="flex flex-wrap gap-2">
+                {product.variants.map((v) => (
+                  <button
+                    key={v._id || v.name}
+                    onClick={() => setSelectedVariant(v)}
+                    className={`px-4 py-2 rounded-xl border text-sm font-medium transition-all ${
+                      selectedVariant?._id === v._id
+                        ? 'border-gold bg-gold/5 text-gold'
+                        : 'border-ink/15 text-ink/60 hover:border-ink/30'
+                    }`}
+                  >
+                    {v.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div className="mt-6 flex items-center gap-4">
             <div className="flex items-center rounded-full border border-ink/15">
               <button onClick={() => setQty(Math.max(1, qty - 1))} className="grid h-11 w-11 place-items-center"><Minus size={16} /></button>
               <span className="w-8 text-center">{qty}</span>
-              <button onClick={() => setQty(Math.min(product.countInStock, qty + 1))} className="grid h-11 w-11 place-items-center"><Plus size={16} /></button>
+              <button onClick={() => setQty(Math.min((selectedVariant ? selectedVariant.countInStock : product.countInStock), qty + 1))} className="grid h-11 w-11 place-items-center"><Plus size={16} /></button>
             </div>
             <button
-              onClick={() => addToCart(product, qty)}
-              disabled={product.countInStock === 0}
+              onClick={() => {
+                const itemToAdd = selectedVariant ? { ...product, price: selectedVariant.price, countInStock: selectedVariant.countInStock, image: selectedVariant.images?.[0] || product.image } : product;
+                addToCart(itemToAdd, qty, selectedVariant?._id, selectedVariant?.name);
+              }}
+              disabled={(selectedVariant ? selectedVariant.countInStock : product.countInStock) === 0}
               className="btn-primary flex-1"
             >
               <ShoppingBag size={16} /> Add to cart

@@ -40,7 +40,7 @@ export default function Navbar() {
         <div className="flex items-center gap-3">
           {user ? (
             <div className="hidden items-center gap-3 md:flex">
-              <Link to="/orders" className="text-sm text-ink/70 hover:text-gold">
+              <Link to="/profile" className="text-sm text-ink/70 hover:text-gold">
                 {user.name.split(' ')[0]}
               </Link>
               <button onClick={() => { logout(); navigate('/'); }} aria-label="Log out" className="text-ink/60 hover:text-ink">
@@ -87,6 +87,9 @@ export default function Navbar() {
           <div className="mt-2 border-t border-ink/10 pt-2">
             {user ? (
               <>
+                <Link to="/profile" onClick={() => setOpen(false)} className="block py-2 text-ink/80">
+                  Profile & Addresses
+                </Link>
                 <Link to="/orders" onClick={() => setOpen(false)} className="block py-2 text-ink/80">
                   My orders
                 </Link>

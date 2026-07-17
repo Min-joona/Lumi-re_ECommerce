@@ -22,8 +22,16 @@ const userSchema = new mongoose.Schema(
       createdAt: { type: Date, default: Date.now },
       lastUsedAt: { type: Date, default: Date.now },
       expiresAt: { type: Date, required: true },
-    }],
     wishlist: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Product' }],
+    savedForLater: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Product' }],
+    addresses: [{
+      fullName: String,
+      address: String,
+      city: String,
+      postalCode: String,
+      country: String,
+      isDefault: { type: Boolean, default: false }
+    }],
   },
   { timestamps: true }
 );

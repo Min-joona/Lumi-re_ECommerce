@@ -1,6 +1,7 @@
 const express = require('express');
 const Order = require('../models/Order');
 const Product = require('../models/Product');
+const Coupon = require('../models/Coupon');
 const { protect, admin, permit } = require('../middleware/auth');
 const InventoryLog = require('../models/InventoryLog');
 const audit = require('../utils/audit');
@@ -10,7 +11,7 @@ const router = express.Router();
 // POST /api/orders  (auth) — create order from cart
 router.post('/', protect, async (req, res) => {
   try {
-    const { orderItems, shippingAddress, paymentMethod } = req.body;
+    const { orderItems, shippingAddress, paymentMethod, couponCode } = req.body;
     if (!orderItems || orderItems.length === 0) {
       return res.status(400).json({ message: 'No order items' });
     }
@@ -29,7 +30,26 @@ router.post('/', protect, async (req, res) => {
 
     const shippingPrice = itemsPrice > 100 ? 0 : 9.99;
     const taxPrice = +(itemsPrice * 0.08).toFixed(2);
-    const totalPrice = +(itemsPrice + shippingPrice + taxPrice).toFixed(2);
+    let discountPrice = 0;
+    let couponApplied = null;
+    let finalTotal = +(itemsPrice + shippingPrice + taxPrice).toFixed(2);
+
+    if (couponCode) {
+      const coupon = await Coupon.findOne({ code: couponCode.toUpperCase() });
+      if (coupon && coupon.isActive && new Date(coupon.expiryDate) >= new Date()) {
+        if (coupon.usageLimit === null || coupon.usedCount < coupon.usageLimit) {
+          couponApplied = coupon._id;
+          if (coupon.discountType === 'percentage') {
+            discountPrice = itemsPrice * (coupon.discountValue / 100);
+          } else {
+            discountPrice = coupon.discountValue;
+          }
+          finalTotal = Math.max(0, finalTotal - discountPrice);
+          coupon.usedCount += 1;
+          await coupon.save();
+        }
+      }
+    }
 
     const order = await Order.create({
       user: req.user._id,
@@ -39,7 +59,9 @@ router.post('/', protect, async (req, res) => {
       itemsPrice,
       shippingPrice,
       taxPrice,
-      totalPrice,
+      discountPrice,
+      couponApplied,
+      totalPrice: finalTotal,
       isPaid: false,
       status: 'Pending',
       timeline: [{ status: 'Pending', note: 'Order placed, awaiting payment', actor: req.user._id }],
@@ -56,7 +78,7 @@ router.post('/', protect, async (req, res) => {
     if (paymentMethod !== 'Cash on Delivery') {
       try {
         const chapaPayload = {
-          amount: totalPrice,
+          amount: finalTotal,
           currency: 'ETB',
           email: req.user.email,
           first_name: req.user.name.split(' ')[0],

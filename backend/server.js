@@ -59,6 +59,8 @@ app.get('/api/health', (_req, res) => res.json({ status: 'ok', service: 'amar-ec
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/products', require('./routes/products'));
 app.use('/api/orders', require('./routes/orders'));
+app.use('/api/coupons', require('./routes/coupons'));
+app.use('/api/contact', require('./routes/contact'));
 app.use('/api/admin', require('./routes/admin'));
 
 // One-time cloud seed, guarded by a shared secret (used when the local

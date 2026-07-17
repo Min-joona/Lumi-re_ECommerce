@@ -14,7 +14,13 @@ router.get('/', async (req, res) => {
     const limit = Number(req.query.limit) || 12;
 
     const filter = {};
-    if (search) filter.name = { $regex: search, $options: 'i' };
+    if (search) {
+      filter.$or = [
+        { name: { $regex: search, $options: 'i' } },
+        { description: { $regex: search, $options: 'i' } },
+        { category: { $regex: search, $options: 'i' } }
+      ];
+    }
     if (category && category !== 'All') filter.category = category;
     if (featured === 'true') filter.featured = true;
 

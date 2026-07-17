@@ -97,6 +97,22 @@ router.get('/:id/inventory-history', protect, permit('inventory.manage'), async 
   res.json(history);
 });
 
+// GET /api/products/:id/recommendations
+router.get('/:id/recommendations', async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.id);
+    if (!product) return res.status(404).json({ message: 'Product not found' });
+    const related = await Product.find({
+      category: product.category,
+      _id: { $ne: product._id },
+      status: 'Active'
+    }).limit(4);
+    res.json(related);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
 // GET /api/products/:slug
 router.get('/:slug', async (req, res) => {
   const product = await Product.findOne({ slug: req.params.slug });

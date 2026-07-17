@@ -3,6 +3,7 @@ import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'rec
 import { AlertTriangle, ArrowUpRight, DollarSign, Package, RefreshCw, ShoppingCart, Users } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../api/client';
+import { useAuth } from '../context/AuthContext';
 
 const statuses = ['Pending', 'Confirmed', 'Paid', 'Packed', 'Shipped', 'Delivered', 'Returned', 'Refunded', 'Cancelled'];
 const money = (value) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value || 0);
@@ -17,11 +18,14 @@ function StatusPill({ status }) {
 }
 
 export default function Admin() {
+  const { user, updateUser } = useAuth();
   const [dashboard, setDashboard] = useState(null);
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState('All');
   const [updating, setUpdating] = useState(null);
+  const [profileForm, setProfileForm] = useState({ name: user?.name || '', email: user?.email || '', password: '' });
+  const [savingProfile, setSavingProfile] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -53,6 +57,21 @@ export default function Admin() {
       toast.error(error.response?.data?.message || 'Update failed');
     } finally {
       setUpdating(null);
+    }
+  };
+
+  const handleProfileUpdate = async (e) => {
+    e.preventDefault();
+    setSavingProfile(true);
+    try {
+      const { data } = await api.put('/api/auth/me', profileForm);
+      updateUser(data.user);
+      setProfileForm({ ...profileForm, password: '' });
+      toast.success('Profile updated successfully');
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to update profile');
+    } finally {
+      setSavingProfile(false);
     }
   };
 
@@ -105,6 +124,28 @@ export default function Admin() {
       </section>
 
       {!loading && <section className="mt-6 rounded-3xl bg-white p-5 sm:p-6"><h2 className="font-serif text-2xl">Recent staff activity</h2><div className="mt-4 grid gap-3 md:grid-cols-2">{dashboard.recentActivity.length ? dashboard.recentActivity.map((event) => <div key={event._id} className="flex items-center gap-3 rounded-2xl bg-cream p-4"><span className="grid h-9 w-9 place-items-center rounded-xl bg-white text-gold"><ArrowUpRight size={17} /></span><div><p className="text-sm font-medium">{event.action.replaceAll('.', ' ')}</p><p className="mt-0.5 text-xs text-ink/50">{event.actorId?.name || 'Staff'} · {new Date(event.createdAt).toLocaleString()}</p></div></div>) : <p className="text-sm text-ink/45">Activity will appear here as staff make changes.</p>}</div></section>}
+      
+      {!loading && (
+        <section className="mt-6 rounded-3xl bg-white p-5 sm:p-6">
+          <h2 className="font-serif text-2xl">Admin Settings</h2>
+          <p className="mt-1 text-sm text-ink/45">Update your account credentials here.</p>
+          <form onSubmit={handleProfileUpdate} className="mt-6 max-w-md space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-ink/80 mb-1">Name</label>
+              <input type="text" value={profileForm.name} onChange={(e) => setProfileForm({ ...profileForm, name: e.target.value })} className="input" placeholder="Your name" required />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-ink/80 mb-1">Email / Username</label>
+              <input type="email" value={profileForm.email} onChange={(e) => setProfileForm({ ...profileForm, email: e.target.value })} className="input" placeholder="Your email" required />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-ink/80 mb-1">New Password (leave blank to keep current)</label>
+              <input type="password" value={profileForm.password} onChange={(e) => setProfileForm({ ...profileForm, password: e.target.value })} className="input" placeholder="New password" />
+            </div>
+            <button type="submit" disabled={savingProfile} className="btn-primary w-full">{savingProfile ? 'Saving...' : 'Save Changes'}</button>
+          </form>
+        </section>
+      )}
     </div>
   );
 }

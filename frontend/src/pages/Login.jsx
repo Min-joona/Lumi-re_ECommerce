@@ -37,11 +37,6 @@ export default function Login() {
           <button disabled={busy} className="btn-primary w-full">{busy ? 'Signing in…' : 'Sign in'}</button>
         </form>
 
-        <div className="mt-4 rounded-xl bg-white p-4 text-xs text-ink/60">
-          <p className="font-semibold">Demo accounts</p>
-          <p>Admin: admin@shop.com / admin123</p>
-          <p>Customer: customer@shop.com / demo123</p>
-        </div>
 
         <p className="mt-6 text-sm text-ink/60">
           New here? <Link to="/register" className="text-gold underline">Create an account</Link>

@@ -84,6 +84,27 @@ router.get('/me', protect, async (req, res) => {
   res.json({ user: publicUser(req.user) });
 });
 
+// PUT /api/auth/me
+router.put('/me', protect, async (req, res) => {
+  try {
+    const { name, email, password } = req.body;
+    const user = req.user;
+    
+    if (name) user.name = name;
+    if (email && email !== user.email) {
+      const exists = await User.findOne({ email });
+      if (exists) return res.status(400).json({ message: 'Email already in use' });
+      user.email = email;
+    }
+    if (password) user.password = password;
+    
+    await user.save();
+    res.json({ user: publicUser(user) });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
 // POST /api/auth/refresh — rotate the httpOnly refresh cookie and return a short-lived access token.
 router.post('/refresh', async (req, res) => {
   try {

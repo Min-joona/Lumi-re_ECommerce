@@ -25,6 +25,7 @@ app.use(
       }
       cb(new Error('Not allowed by CORS'));
     },
+    credentials: true,
   })
 );
 app.use(express.json({ limit: '1mb' }));
@@ -58,6 +59,7 @@ app.get('/api/health', (_req, res) => res.json({ status: 'ok', service: 'amar-ec
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/products', require('./routes/products'));
 app.use('/api/orders', require('./routes/orders'));
+app.use('/api/admin', require('./routes/admin'));
 
 // One-time cloud seed, guarded by a shared secret (used when the local
 // network can't reach Atlas directly). Not linked from anywhere public.

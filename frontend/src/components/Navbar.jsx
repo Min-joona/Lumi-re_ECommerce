@@ -14,7 +14,7 @@ export default function Navbar() {
     { to: '/', label: 'Home' },
     { to: '/shop', label: 'Shop' },
   ];
-  if (user?.isAdmin) links.push({ to: '/admin', label: 'Admin' });
+  if (user && (user.isAdmin || user.role !== 'customer')) links.push({ to: '/admin', label: 'Admin' });
 
   return (
     <header className="sticky top-0 z-40 border-b border-ink/10 bg-cream/80 backdrop-blur-md">

@@ -9,13 +9,15 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@voxide/react": "^0.2.5",
     "axios": "^1.7.2",
     "framer-motion": "^11.3.8",
     "lucide-react": "^0.417.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-hot-toast": "^2.4.1",
-    "react-router-dom": "^6.25.1"
+    "react-router-dom": "^6.25.1",
+    "recharts": "^3.9.2"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.3.1",

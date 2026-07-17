@@ -12,11 +12,12 @@ import Orders from './pages/Orders';
 import OrderDetail from './pages/OrderDetail';
 import Admin from './pages/Admin';
 import { useAuth } from './context/AuthContext';
+import Assistant from './components/Assistant';
 
 function Protected({ children, adminOnly }) {
   const { user } = useAuth();
   if (!user) return <Navigate to="/login" replace />;
-  if (adminOnly && !user.isAdmin) return <Navigate to="/" replace />;
+  if (adminOnly && !(user.isAdmin || user.role !== 'customer')) return <Navigate to="/" replace />;
   return children;
 }
 
@@ -40,6 +41,7 @@ export default function App() {
         </Routes>
       </main>
       <Footer />
+      <Assistant />
     </div>
   );
 }

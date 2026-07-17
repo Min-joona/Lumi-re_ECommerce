@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { CheckCircle2 } from 'lucide-react';
+import { CheckCircle2, MapPin } from 'lucide-react';
 import api from '../api/client';
 import Loader from '../components/Loader';
 
@@ -59,6 +59,15 @@ export default function OrderDetail() {
             <div className="flex justify-between border-t border-ink/10 pt-2 font-semibold"><dt>Total</dt><dd>${order.totalPrice?.toFixed(2)}</dd></div>
           </dl>
         </div>
+      </div>
+
+      <div className="mt-6 rounded-2xl bg-white p-6">
+        <div className="flex items-center justify-between gap-4"><h2 className="font-serif text-xl">Order timeline</h2>{order.trackingNumber && <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-700"><MapPin size={14} /> {order.trackingNumber}</span>}</div>
+        <ol className="mt-5 space-y-4 border-l border-gold/30 pl-5">
+          {(order.timeline?.length ? [...order.timeline].reverse() : [{ status: order.status, createdAt: order.createdAt }]).map((event, index) => (
+            <li key={`${event.createdAt}-${index}`} className="relative"><span className="absolute -left-[25px] top-1 h-2.5 w-2.5 rounded-full bg-gold ring-4 ring-cream" /><p className="text-sm font-medium">{event.status}</p>{event.note && <p className="mt-0.5 text-sm text-ink/55">{event.note}</p>}<p className="mt-1 text-xs text-ink/40">{new Date(event.createdAt).toLocaleString()}</p></li>
+          ))}
+        </ol>
       </div>
 
       <Link to="/orders" className="mt-8 block text-center text-sm text-ink/50 hover:text-ink">← Back to my orders</Link>

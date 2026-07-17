@@ -7,6 +7,22 @@ const userSchema = new mongoose.Schema(
     email: { type: String, required: true, unique: true, lowercase: true, index: true },
     password: { type: String, required: true, minlength: 6, select: false },
     isAdmin: { type: Boolean, default: false },
+    role: {
+      type: String,
+      enum: ['customer', 'super_admin', 'admin', 'manager', 'support', 'editor'],
+      default: 'customer',
+    },
+    permissions: [{ type: String }],
+    status: { type: String, enum: ['active', 'suspended', 'banned'], default: 'active' },
+    refreshSessions: [{
+      _id: String,
+      tokenHash: { type: String, required: true },
+      userAgent: String,
+      ip: String,
+      createdAt: { type: Date, default: Date.now },
+      lastUsedAt: { type: Date, default: Date.now },
+      expiresAt: { type: Date, required: true },
+    }],
   },
   { timestamps: true }
 );

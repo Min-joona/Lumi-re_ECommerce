@@ -30,9 +30,14 @@ const orderSchema = new mongoose.Schema(
     deliveredAt: Date,
     status: {
       type: String,
-      enum: ['Pending', 'Paid', 'Shipped', 'Delivered', 'Cancelled'],
+      enum: ['Pending', 'Confirmed', 'Paid', 'Packed', 'Shipped', 'Delivered', 'Returned', 'Refunded', 'Cancelled'],
       default: 'Pending',
     },
+    trackingNumber: String,
+    cancellationReason: String,
+    staffNotes: [{ body: String, author: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, createdAt: { type: Date, default: Date.now } }],
+    timeline: [{ status: String, note: String, actor: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, createdAt: { type: Date, default: Date.now } }],
+    refunds: [{ amount: Number, reason: String, actor: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, createdAt: { type: Date, default: Date.now } }],
   },
   { timestamps: true }
 );

@@ -23,11 +23,15 @@ export default function Checkout() {
       const { data } = await api.post('/api/orders', {
         orderItems: items.map((i) => ({ product: i.product, qty: i.qty })),
         shippingAddress: addr,
-        paymentMethod: 'Card (Demo)',
+        paymentMethod: 'Chapa',
       });
       clearCart();
-      toast.success('Order placed!');
-      navigate(`/orders/${data._id}`);
+      toast.success('Order placed! Redirecting to payment...');
+      if (data.checkout_url) {
+        window.location.href = data.checkout_url;
+      } else {
+        navigate(`/orders/${data.order._id}`);
+      }
     } catch (err) {
       toast.error(err.response?.data?.message || 'Checkout failed');
     } finally {
@@ -58,13 +62,11 @@ export default function Checkout() {
 
           <div className="rounded-2xl bg-white p-6">
             <h2 className="font-serif text-xl">Payment</h2>
-            <p className="mt-2 text-sm text-ink/50">
-              This is a demo store — no real payment is processed. Your order is marked paid instantly.
-            </p>
-            <div className="mt-4 grid gap-4 sm:grid-cols-2">
-              <input className="input sm:col-span-2" placeholder="Card number (4242 4242 4242 4242)" defaultValue="4242 4242 4242 4242" />
-              <input className="input" placeholder="MM / YY" defaultValue="12 / 28" />
-              <input className="input" placeholder="CVC" defaultValue="123" />
+            <div className="mt-4 flex items-center gap-4 rounded-xl border border-gold/30 bg-gold/5 p-4">
+               <img src="https://chapa.co/images/logo.png" alt="Chapa" className="h-6 object-contain" onError={(e) => e.target.style.display = 'none'} />
+               <p className="text-sm text-ink/70">
+                 You will be redirected securely to Chapa to complete your payment via Telebirr, CBE Birr, Awash, or Card.
+               </p>
             </div>
           </div>
         </div>
@@ -75,18 +77,18 @@ export default function Checkout() {
             {items.map((i) => (
               <div key={i.product} className="flex justify-between text-sm">
                 <span className="text-ink/70">{i.name} × {i.qty}</span>
-                <span>${(i.price * i.qty).toFixed(2)}</span>
+                <span>ETB {(i.price * i.qty).toFixed(2)}</span>
               </div>
             ))}
           </div>
           <dl className="mt-4 space-y-2 border-t border-ink/10 pt-4 text-sm">
-            <div className="flex justify-between"><dt className="text-ink/60">Subtotal</dt><dd>${subtotal.toFixed(2)}</dd></div>
-            <div className="flex justify-between"><dt className="text-ink/60">Shipping</dt><dd>{shipping === 0 ? 'Free' : `$${shipping.toFixed(2)}`}</dd></div>
-            <div className="flex justify-between"><dt className="text-ink/60">Tax</dt><dd>${tax.toFixed(2)}</dd></div>
-            <div className="flex justify-between border-t border-ink/10 pt-2 text-base font-semibold"><dt>Total</dt><dd>${total.toFixed(2)}</dd></div>
+            <div className="flex justify-between"><dt className="text-ink/60">Subtotal</dt><dd>ETB {subtotal.toFixed(2)}</dd></div>
+            <div className="flex justify-between"><dt className="text-ink/60">Shipping</dt><dd>{shipping === 0 ? 'Free' : `ETB ${shipping.toFixed(2)}`}</dd></div>
+            <div className="flex justify-between"><dt className="text-ink/60">Tax</dt><dd>ETB {tax.toFixed(2)}</dd></div>
+            <div className="flex justify-between border-t border-ink/10 pt-2 text-base font-semibold"><dt>Total</dt><dd>ETB {total.toFixed(2)}</dd></div>
           </dl>
           <button disabled={placing} className="btn-primary mt-6 w-full">
-            {placing ? 'Placing order…' : `Pay $${total.toFixed(2)}`}
+            {placing ? 'Redirecting…' : `Pay ETB ${total.toFixed(2)}`}
           </button>
         </div>
       </form>

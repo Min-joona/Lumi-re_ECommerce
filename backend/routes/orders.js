@@ -40,10 +40,9 @@ router.post('/', protect, async (req, res) => {
       shippingPrice,
       taxPrice,
       totalPrice,
-      isPaid: true, // demo checkout auto-pays
-      paidAt: Date.now(),
-      status: 'Paid',
-      timeline: [{ status: 'Paid', note: 'Order placed and payment recorded', actor: req.user._id }],
+      isPaid: false,
+      status: 'Pending',
+      timeline: [{ status: 'Pending', note: 'Order placed, awaiting payment', actor: req.user._id }],
     });
     // Inventory is reserved when an order is placed, not when it ships.
     for (const item of items) {
@@ -51,7 +50,47 @@ router.post('/', protect, async (req, res) => {
       if (!updated) return res.status(409).json({ message: `${item.name} just went out of stock` });
       await InventoryLog.create({ product: item.product, previousStock: updated.countInStock + item.qty, newStock: updated.countInStock, reason: `Reserved for order ${order._id}` });
     }
-    res.status(201).json(order);
+
+    // Initialize Chapa transaction
+    let checkout_url = null;
+    if (paymentMethod !== 'Cash on Delivery') {
+      try {
+        const chapaPayload = {
+          amount: totalPrice,
+          currency: 'ETB',
+          email: req.user.email,
+          first_name: req.user.name.split(' ')[0],
+          last_name: req.user.name.split(' ').slice(1).join(' ') || 'Customer',
+          tx_ref: order._id.toString(),
+          callback_url: `${process.env.BACKEND_URL || 'http://localhost:5000'}/api/orders/webhook/chapa`,
+          return_url: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/orders/${order._id}`,
+          customization: {
+             title: 'Lumière Store',
+             description: 'Payment for your order'
+          }
+        };
+
+        const response = await fetch('https://api.chapa.co/v1/transaction/initialize', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${process.env.CHAPA_SECRET_KEY}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(chapaPayload)
+        });
+
+        const data = await response.json();
+        if (data.status === 'success') {
+          checkout_url = data.data.checkout_url;
+        } else {
+          console.error('Chapa init failed:', data);
+        }
+      } catch (err) {
+        console.error('Chapa error:', err);
+      }
+    }
+
+    res.status(201).json({ order, checkout_url });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -61,6 +100,43 @@ router.post('/', protect, async (req, res) => {
 router.get('/mine', protect, async (req, res) => {
   const orders = await Order.find({ user: req.user._id }).sort({ createdAt: -1 });
   res.json(orders);
+});
+
+// POST /api/orders/webhook/chapa
+router.post('/webhook/chapa', express.json(), async (req, res) => {
+  try {
+    const crypto = require('crypto');
+    const hash = crypto.createHmac('sha256', process.env.CHAPA_SECRET_KEY || '').update(JSON.stringify(req.body)).digest('hex');
+    
+    // Optional: Validate signature if present
+    if (req.headers['chapa-signature'] && hash !== req.headers['chapa-signature']) {
+      return res.status(400).send('Invalid signature');
+    }
+    
+    const { tx_ref, status } = req.body;
+    if (status === 'success') {
+      const order = await Order.findById(tx_ref);
+      if (order && !order.isPaid) {
+        // Verify with Chapa API directly to prevent spoofing
+        const response = await fetch(`https://api.chapa.co/v1/transaction/verify/${tx_ref}`, {
+          headers: { 'Authorization': `Bearer ${process.env.CHAPA_SECRET_KEY}` }
+        });
+        const data = await response.json();
+        
+        if (data.status === 'success' && data.data.status === 'success') {
+           order.isPaid = true;
+           order.paidAt = Date.now();
+           order.status = 'Paid';
+           order.timeline.push({ status: 'Paid', note: 'Payment received via Chapa', actor: order.user });
+           await order.save();
+        }
+      }
+    }
+    res.status(200).send('OK');
+  } catch (error) {
+    console.error('Webhook error:', error);
+    res.status(500).send('Webhook Error');
+  }
 });
 
 // GET /api/orders  (admin)

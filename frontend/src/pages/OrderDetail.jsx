@@ -34,7 +34,7 @@ export default function OrderDetail() {
                 <p className="font-medium">{i.name}</p>
                 <p className="text-sm text-ink/50">Qty {i.qty}</p>
               </div>
-              <span className="font-semibold">${(i.price * i.qty).toFixed(2)}</span>
+              <span className="font-semibold">ETB {(i.price * i.qty).toFixed(2)}</span>
             </div>
           ))}
         </div>
@@ -53,10 +53,10 @@ export default function OrderDetail() {
         <div className="rounded-2xl bg-white p-6">
           <h2 className="font-serif text-xl">Summary</h2>
           <dl className="mt-3 space-y-2 text-sm">
-            <div className="flex justify-between"><dt className="text-ink/60">Items</dt><dd>${order.itemsPrice?.toFixed(2)}</dd></div>
-            <div className="flex justify-between"><dt className="text-ink/60">Shipping</dt><dd>${order.shippingPrice?.toFixed(2)}</dd></div>
-            <div className="flex justify-between"><dt className="text-ink/60">Tax</dt><dd>${order.taxPrice?.toFixed(2)}</dd></div>
-            <div className="flex justify-between border-t border-ink/10 pt-2 font-semibold"><dt>Total</dt><dd>${order.totalPrice?.toFixed(2)}</dd></div>
+            <div className="flex justify-between"><dt className="text-ink/60">Items</dt><dd>ETB {order.itemsPrice?.toFixed(2)}</dd></div>
+            <div className="flex justify-between"><dt className="text-ink/60">Shipping</dt><dd>ETB {order.shippingPrice?.toFixed(2)}</dd></div>
+            <div className="flex justify-between"><dt className="text-ink/60">Tax</dt><dd>ETB {order.taxPrice?.toFixed(2)}</dd></div>
+            <div className="flex justify-between border-t border-ink/10 pt-2 font-semibold"><dt>Total</dt><dd>ETB {order.totalPrice?.toFixed(2)}</dd></div>
           </dl>
         </div>
       </div>

@@ -105,6 +105,45 @@ router.put('/me', protect, async (req, res) => {
   }
 });
 
+// GET /api/auth/wishlist
+router.get('/wishlist', protect, async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id).populate('wishlist');
+    res.json(user.wishlist || []);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// POST /api/auth/wishlist
+router.post('/wishlist', protect, async (req, res) => {
+  try {
+    const { productId } = req.body;
+    const user = await User.findById(req.user._id);
+    if (!user.wishlist.includes(productId)) {
+      user.wishlist.push(productId);
+      await user.save();
+    }
+    const updatedUser = await User.findById(req.user._id).populate('wishlist');
+    res.json(updatedUser.wishlist);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// DELETE /api/auth/wishlist/:productId
+router.delete('/wishlist/:productId', protect, async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+    user.wishlist = user.wishlist.filter(id => id.toString() !== req.params.productId);
+    await user.save();
+    const updatedUser = await User.findById(req.user._id).populate('wishlist');
+    res.json(updatedUser.wishlist);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
 // POST /api/auth/refresh — rotate the httpOnly refresh cookie and return a short-lived access token.
 router.post('/refresh', async (req, res) => {
   try {

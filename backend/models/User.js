@@ -23,6 +23,7 @@ const userSchema = new mongoose.Schema(
       lastUsedAt: { type: Date, default: Date.now },
       expiresAt: { type: Date, required: true },
     }],
+    wishlist: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Product' }],
   },
   { timestamps: true }
 );

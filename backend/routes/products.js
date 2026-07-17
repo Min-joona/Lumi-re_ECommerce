@@ -9,7 +9,7 @@ const router = express.Router();
 // GET /api/products?search=&category=&sort=&page=&featured=
 router.get('/', async (req, res) => {
   try {
-    const { search, category, sort, featured } = req.query;
+    const { search, category, sort, featured, minRating } = req.query;
     const page = Number(req.query.page) || 1;
     const limit = Number(req.query.limit) || 12;
 
@@ -23,6 +23,7 @@ router.get('/', async (req, res) => {
     }
     if (category && category !== 'All') filter.category = category;
     if (featured === 'true') filter.featured = true;
+    if (minRating) filter.rating = { $gte: Number(minRating) };
 
     const sortMap = {
       'price-asc': { price: 1 },
@@ -112,7 +113,7 @@ router.get('/:id/recommendations', async (req, res) => {
       category: product.category,
       _id: { $ne: product._id },
       status: 'Active'
-    }).limit(4);
+    }).sort({ rating: -1 }).limit(8);
     res.json(related);
   } catch (err) {
     res.status(500).json({ message: err.message });

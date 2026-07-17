@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 import api from '../api/client';
 import Loader from '../components/Loader';
 import Rating from '../components/Rating';
+import ProductCard from '../components/ProductCard';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 
@@ -16,10 +17,18 @@ export default function ProductDetail() {
   const [qty, setQty] = useState(1);
   const [loading, setLoading] = useState(true);
   const [review, setReview] = useState({ rating: 5, comment: '' });
+  const [related, setRelated] = useState([]);
 
   const load = () => {
     setLoading(true);
-    api.get(`/api/products/${slug}`).then(({ data }) => setProduct(data)).finally(() => setLoading(false));
+    api.get(`/api/products/${slug}`)
+      .then(({ data }) => {
+        setProduct(data);
+        return api.get(`/api/products/${data._id}/recommendations`);
+      })
+      .then(({ data }) => setRelated(data))
+      .catch(console.error)
+      .finally(() => setLoading(false));
   };
   useEffect(load, [slug]);
 
@@ -98,8 +107,22 @@ export default function ProductDetail() {
         </div>
       </div>
 
+      {/* Related Products Carousel */}
+      {related.length > 0 && (
+        <section className="mt-20">
+          <h2 className="font-serif text-2xl">Customers Also Bought</h2>
+          <div className="mt-8 flex gap-6 overflow-x-auto pb-6 snap-x hide-scrollbar">
+            {related.map((p) => (
+              <div key={p._id} className="min-w-[280px] max-w-[280px] snap-start">
+                <ProductCard product={p} />
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
       {/* Reviews */}
-      <section className="mt-16 max-w-3xl">
+      <section className="mt-20 max-w-3xl">
         <h2 className="font-serif text-2xl">Reviews ({product.numReviews})</h2>
         <div className="mt-6 space-y-5">
           {product.reviews.length === 0 && <p className="text-ink/50">No reviews yet — be the first.</p>}

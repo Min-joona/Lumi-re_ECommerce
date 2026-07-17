@@ -1,5 +1,5 @@
 import { Link, NavLink, useNavigate } from 'react-router-dom';
-import { ShoppingBag, User, Menu, X, LogOut } from 'lucide-react';
+import { ShoppingBag, User, Menu, X, LogOut, Heart } from 'lucide-react';
 import { useState } from 'react';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
@@ -53,6 +53,10 @@ export default function Navbar() {
             </Link>
           )}
 
+          <Link to="/wishlist" className="relative grid h-10 w-10 place-items-center rounded-full hover:bg-ink/5" aria-label="Wishlist">
+            <Heart size={20} className="text-ink/70 hover:text-gold" />
+          </Link>
+
           <Link to="/cart" className="relative grid h-10 w-10 place-items-center rounded-full hover:bg-ink/5">
             <ShoppingBag size={20} />
             {itemCount > 0 && (
@@ -85,6 +89,9 @@ export default function Navbar() {
               <>
                 <Link to="/orders" onClick={() => setOpen(false)} className="block py-2 text-ink/80">
                   My orders
+                </Link>
+                <Link to="/wishlist" onClick={() => setOpen(false)} className="block py-2 text-ink/80">
+                  Wishlist
                 </Link>
                 <button onClick={() => { logout(); setOpen(false); navigate('/'); }} className="py-2 text-ink/80">
                   Log out

@@ -1,12 +1,15 @@
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ShoppingBag } from 'lucide-react';
+import { ShoppingBag, Heart } from 'lucide-react';
 import Rating from './Rating';
 import { useCart } from '../context/CartContext';
+import { useWishlist } from '../context/WishlistContext';
 
 export default function ProductCard({ product }) {
   const { addToCart } = useCart();
+  const { wishlist, toggleWishlist, isWishlisted } = useWishlist() || {};
   const onSale = product.compareAtPrice > product.price;
+  const saved = isWishlisted ? isWishlisted(product._id) : false;
 
   return (
     <motion.div
@@ -14,7 +17,7 @@ export default function ProductCard({ product }) {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ duration: 0.4 }}
-      className="group flex flex-col"
+      className="group relative flex flex-col"
     >
       <Link to={`/product/${product.slug}`} className="relative block overflow-hidden rounded-2xl bg-white">
         <div className="aspect-square overflow-hidden">
@@ -36,6 +39,14 @@ export default function ProductCard({ product }) {
           </span>
         )}
       </Link>
+      
+      <button 
+        onClick={(e) => { e.preventDefault(); toggleWishlist && toggleWishlist(product); }}
+        className="absolute right-3 top-3 z-10 grid h-8 w-8 place-items-center rounded-full bg-white text-ink shadow-sm transition hover:scale-110"
+        aria-label="Save to wishlist"
+      >
+        <Heart size={16} className={saved ? "fill-gold text-gold" : ""} />
+      </button>
 
       <div className="mt-4 flex flex-1 flex-col">
         <span className="text-[11px] uppercase tracking-widest text-ink/40">{product.category}</span>
@@ -47,10 +58,10 @@ export default function ProductCard({ product }) {
         </div>
         <div className="mt-3 flex items-center justify-between">
           <div className="flex items-baseline gap-2">
-            <span className="text-lg font-semibold">${product.price.toFixed(2)}</span>
+            <span className="text-lg font-semibold">ETB {product.price.toFixed(2)}</span>
             {onSale && (
               <span className="text-sm text-ink/40 line-through">
-                ${product.compareAtPrice.toFixed(2)}
+                ETB {product.compareAtPrice.toFixed(2)}
               </span>
             )}
           </div>
